@@ -26,63 +26,89 @@
                 <div id="deaths" style="width: 100%; min-height: 50vh;"></div>
             </div>
         </div>
-    </div>
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"
-        integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-        google.charts.load('current', {
-            'packages': ['geochart'],
-            // Note: you will need to get a mapsApiKey for your project.
-            // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
-            'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
-        });
-        google.charts.setOnLoadCallback(drawRegionsMap);
+        <div class="row">
+            <div class="col">
+                <h1>Ratio Of Confirmed / Deaths</h1>
+                <div id="ratio" style="width: 100%; min-height: 50vh;"></div>
+            </div>
+        </div>
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+            google.charts.load('current', {
+                'packages': ['geochart'],
+                // Note: you will need to get a mapsApiKey for your project.
+                // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+                'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+            });
+            google.charts.setOnLoadCallback(drawRegionsMap);
 
-        var options = {
-            region: 'IN',
-            displayMode: 'regions',
-            resolution: 'provinces',
-            colorAxis: { colors: ['green', 'red'] }
-        };
+            var options = {
+                region: 'IN',
+                displayMode: 'regions',
+                resolution: 'provinces',
+                colorAxis: { colors: ['green', 'red'] }
+            };
 
-        function drawRegionsMap() {
+            function drawRegionsMap() {
 
-            $.get('https://api.covid19india.org/data.json', function (resp) {
-                let countryData = resp['statewise']
-                let filteredData = countryData.filter(d => d.state != 'Total')
-                let statewiseConfirmedData = filteredData.map(d => [d.state, +d.confirmed])
-                let statewiseDeathData = filteredData.map(d => [d.state, +d.deaths])
-                var confirmedData = google.visualization.arrayToDataTable([
-                    ['State', 'Confirmed'],
-                    ...statewiseConfirmedData
-                ]);
-                var deathsData = google.visualization.arrayToDataTable([
-                    ['State', 'Deaths'],
-                    ...statewiseDeathData
-                ]);
-                confirmedChart.draw(confirmedData, options);
-                deathsChart.draw(deathsData, options);
-            })
+                $.get('https://api.covid19india.org/data.json', function (resp) {
+                    let countryData = resp['statewise']
+                    let filteredData = countryData.filter(d => d.state != 'Total')
+                    let statewiseConfirmedData = filteredData.map(d => [d.state, +d.confirmed])
+                    let statewiseDeathData = filteredData.map(d => [d.state, +d.deaths])
+                    let stateRatio = filteredData.map(d => {
+                        const confirmed = +d.confirmed;
+                        const deaths = +d.deaths;
+                        const ratio = +d.deaths / +d.confirmed;
+                        if (deaths > 0) {
+                            if (isNaN(ratio)) {
+                                return [d.state, 0]
+                            }
+                            return [d.state, (+d.deaths / +d.confirmed) * 100]
+                        }
+                        return [d.state, 0]
+                    }
+                    )
+                    console.log(stateRatio)
+                    var confirmedData = google.visualization.arrayToDataTable([
+                        ['State', 'Confirmed'],
+                        ...statewiseConfirmedData
+                    ]);
+                    var deathsData = google.visualization.arrayToDataTable([
+                        ['State', 'Deaths'],
+                        ...statewiseDeathData
+                    ]);
+                    var ratioData = google.visualization.arrayToDataTable([
+                        ['State', 'Ratio'],
+                        ...stateRatio
+                    ]);
+                    confirmedChart.draw(confirmedData, options);
+                    deathsChart.draw(deathsData, options);
+                    ratioChart.draw(ratioData, options);
+
+                })
 
 
 
 
-            var confirmedChart = new google.visualization.GeoChart(document.getElementById('confirmed'));
-            var deathsChart = new google.visualization.GeoChart(document.getElementById('deaths'));
+                var confirmedChart = new google.visualization.GeoChart(document.getElementById('confirmed'));
+                var deathsChart = new google.visualization.GeoChart(document.getElementById('deaths'));
+
+                var ratioChart = new google.visualization.GeoChart(document.getElementById('ratio'));
 
 
-
-        }
-    </script>
+            }
+        </script>
 </body>
 
 </html>
