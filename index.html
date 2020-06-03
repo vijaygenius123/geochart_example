@@ -18,9 +18,11 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col  col-lg-12 col-xl-6">
+                <h1>Confirmed Cases</h1>
                 <div id="confirmed" style="width: 100%; min-height: 50vh;"></div>
             </div>
             <div class="col col-lg-12 col-xl-6">
+                <h1>Deaths</h1>
                 <div id="deaths" style="width: 100%; min-height: 50vh;"></div>
             </div>
         </div>
@@ -48,15 +50,17 @@
         var options = {
             region: 'IN',
             displayMode: 'regions',
-            resolution: 'provinces'
+            resolution: 'provinces',
+            colorAxis: { colors: ['green', 'red'] }
         };
 
         function drawRegionsMap() {
 
             $.get('https://api.covid19india.org/data.json', function (resp) {
                 let countryData = resp['statewise']
-                let statewiseConfirmedData = countryData.map(d => [d.state, +d.confirmed])
-                let statewiseDeathData = countryData.map(d => [d.state, +d.deaths])
+                let filteredData = countryData.filter(d => d.state != 'Total')
+                let statewiseConfirmedData = filteredData.map(d => [d.state, +d.confirmed])
+                let statewiseDeathData = filteredData.map(d => [d.state, +d.deaths])
                 var confirmedData = google.visualization.arrayToDataTable([
                     ['State', 'Confirmed'],
                     ...statewiseConfirmedData
@@ -74,6 +78,8 @@
 
             var confirmedChart = new google.visualization.GeoChart(document.getElementById('confirmed'));
             var deathsChart = new google.visualization.GeoChart(document.getElementById('deaths'));
+
+
 
         }
     </script>
